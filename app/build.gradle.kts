@@ -103,6 +103,9 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1") // для поддержки корутин
+
+    // Шрифты
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.6.4")
 }
 
 kapt {
