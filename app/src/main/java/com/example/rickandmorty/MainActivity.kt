@@ -61,7 +61,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-                    composable(NavRoutes.FILTERS) { FiltersScreen() }
+                    composable(NavRoutes.FILTERS) {
+                        FiltersScreen(navController = navController)
+                    }
                     composable(
                         route = NavRoutes.CHARACTER_DETAILS,
                         arguments = listOf(navArgument("characterId") { type = NavType.IntType })
