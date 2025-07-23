@@ -1,5 +1,6 @@
 package com.example.rickandmorty.screens.home
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
@@ -74,7 +76,9 @@ fun HomeScreen(navController: NavHostController) {
     val characters by viewModel.characters.collectAsState(initial = emptyList())
     val isLoading by viewModel.isLoading.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val isLoadingNextPage by viewModel.isLoadingNextPage.collectAsState()
     val networkError by viewModel.networkError.collectAsState()
+    val canLoadMore by viewModel.canLoadMore.collectAsState()
 
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
     var searchQuery by remember { mutableStateOf("") }
@@ -117,7 +121,7 @@ fun HomeScreen(navController: NavHostController) {
                             .padding(end = 8.dp),
                         placeholder = { Text("Найти персонажа...") },
                         singleLine = true,
-                        shape = Shapes.extraLarge,
+                        shape = Shapes.medium,
                         colors = androidx.compose.material3.TextFieldDefaults.outlinedTextFieldColors(
                             containerColor = MaterialTheme.colorScheme.surface,
                             unfocusedBorderColor = Color.Transparent,
@@ -186,9 +190,38 @@ fun HomeScreen(navController: NavHostController) {
                         items(characters) { character ->
                             CharacterCard(character = character)
                         }
+
+                        item(span = {
+                            GridItemSpan(maxLineSpan)
+                        }) {
+                            if (canLoadMore) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Button(
+                                        onClick = { viewModel.loadNextPage() },
+                                        enabled = !isLoadingNextPage
+                                    ) {
+                                        if (isLoadingNextPage) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(20.dp),
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                                strokeWidth = 2.dp
+                                            )
+                                        } else {
+                                            Text("Загрузить еще")
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     if (isLoading && !isRefreshing) {
+                        Log.d("HomeScreen", "Showing loading state")
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -199,11 +232,13 @@ fun HomeScreen(navController: NavHostController) {
                         }
                     }
                 } else {
+                    Log.d("HomeScreen", "Showing error screen (нет интернета и пусто)")
                     when {
                         isLoading && !isRefreshing -> {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                             }
+                            Log.d("HomeScreen", "characters: ${characters.size}, networkError: $networkError, isLoading: $isLoading")
                         }
                         networkError -> {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -243,6 +278,7 @@ fun HomeScreen(navController: NavHostController) {
                             }
                         }
                         else -> {
+                            Log.d("HomeScreen", "Showing character list")
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(

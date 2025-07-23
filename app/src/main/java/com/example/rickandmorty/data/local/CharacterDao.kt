@@ -4,16 +4,18 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CharacterDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(characters: List<CharacterEntity>)
 
-    @Query("SELECT * FROM characters")
-    fun getAllCharacters(): Flow<List<CharacterEntity>>
+    @Query("SELECT * FROM characters WHERE page = :page")
+    suspend fun getCharactersByPage(page: Int): List<CharacterEntity>
 
-    @Query("DELETE FROM characters")
-    suspend fun clearAll()
+    @Query("DELETE FROM characters WHERE page = :page")
+    suspend fun deletePage(page: Int)
+
+    @Query("SELECT MAX(page) FROM characters")
+    suspend fun getMaxPage(): Int?
 }

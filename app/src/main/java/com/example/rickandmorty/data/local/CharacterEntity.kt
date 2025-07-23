@@ -13,7 +13,8 @@ data class CharacterEntity(
     val species: String,
     val type: String,
     val gender: String,
-    val image: String
+    val image: String,
+    val page: Int
 ) {
     fun toCharacterItem() = CharacterItem(
         id = id,
@@ -27,16 +28,18 @@ data class CharacterEntity(
         image = image,
         episode = emptyList(),
         url = "",
-        created = ""
+        created = "",
+        page = page
     )
 }
 
-fun CharacterItem.toCharacterEntity() = CharacterEntity(
+fun CharacterItem.toCharacterEntity(page: Int) = CharacterEntity(
     id = id,
     name = name,
     status = status,
     species = species,
     type = type,
     gender = gender,
-    image = image
+    image = image,
+    page = page
 )
