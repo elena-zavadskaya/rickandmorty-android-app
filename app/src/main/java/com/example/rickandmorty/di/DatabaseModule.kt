@@ -27,4 +27,7 @@ object DatabaseModule {
 
     @Provides
     fun provideCharacterDao(database: AppDatabase) = database.characterDao()
+
+    @Provides
+    fun provideCharacterDetailDao(database: AppDatabase) = database.characterDetailDao()
 }

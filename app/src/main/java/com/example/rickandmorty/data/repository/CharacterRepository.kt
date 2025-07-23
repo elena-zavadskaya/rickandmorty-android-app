@@ -2,7 +2,10 @@ package com.example.rickandmorty.data.repository
 
 import com.example.rickandmorty.data.api.RickAndMortyApi
 import com.example.rickandmorty.data.local.CharacterDao
+import com.example.rickandmorty.data.local.CharacterDetailDao
+import com.example.rickandmorty.data.local.toCharacterDetail
 import com.example.rickandmorty.data.local.toCharacterEntity
+import com.example.rickandmorty.data.local.toEntity
 import com.example.rickandmorty.data.model.CharacterDetail
 import com.example.rickandmorty.data.model.CharacterItem
 import com.example.rickandmorty.data.network.Connectivity
@@ -13,6 +16,7 @@ import javax.inject.Inject
 class CharacterRepository @Inject constructor(
     private val api: RickAndMortyApi,
     private val characterDao: CharacterDao,
+    private val characterDetailDao: CharacterDetailDao,
     private val connectivity: Connectivity
 ) {
     data class LoadResult(
@@ -51,12 +55,13 @@ class CharacterRepository @Inject constructor(
     }
 
     suspend fun getCharacterDetail(id: Int): CharacterDetail {
-        return withContext(Dispatchers.IO) {
-            if (connectivity.isConnected()) {
-                api.getCharacterById(id)
-            } else {
-                throw Exception("No internet connection")
-            }
-        }
+        val cached = characterDetailDao.getCharacterDetailById(id)
+        if (cached != null) return cached.toCharacterDetail()
+
+        val detail = api.getCharacterById(id)
+
+        characterDetailDao.insert(detail.toEntity())
+
+        return detail
     }
 }
