@@ -3,6 +3,7 @@ package com.example.rickandmorty.data.repository
 import com.example.rickandmorty.data.api.RickAndMortyApi
 import com.example.rickandmorty.data.local.CharacterDao
 import com.example.rickandmorty.data.local.toCharacterEntity
+import com.example.rickandmorty.data.model.CharacterDetail
 import com.example.rickandmorty.data.model.CharacterItem
 import com.example.rickandmorty.data.network.Connectivity
 import kotlinx.coroutines.Dispatchers
@@ -46,6 +47,16 @@ class CharacterRepository @Inject constructor(
                 characters = entities.map { it.toCharacterItem() },
                 totalPages = characterDao.getMaxPage() ?: 1
             )
+        }
+    }
+
+    suspend fun getCharacterDetail(id: Int): CharacterDetail {
+        return withContext(Dispatchers.IO) {
+            if (connectivity.isConnected()) {
+                api.getCharacterById(id)
+            } else {
+                throw Exception("No internet connection")
+            }
         }
     }
 }

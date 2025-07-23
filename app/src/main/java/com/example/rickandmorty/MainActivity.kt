@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
                         arguments = listOf(navArgument("characterId") { type = NavType.IntType })
                     ) { backStackEntry ->
                         val characterId = backStackEntry.arguments?.getInt("characterId") ?: 0
-                        CharacterDetailsScreen(characterId = characterId)
+                        CharacterDetailsScreen(navController = navController)
                     }
                 }
             }
