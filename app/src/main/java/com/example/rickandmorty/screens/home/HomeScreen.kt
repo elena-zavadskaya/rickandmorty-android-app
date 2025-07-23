@@ -1,6 +1,5 @@
 package com.example.rickandmorty.screens.home
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -66,6 +66,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.rickandmorty.data.model.CharacterItem
 import com.example.rickandmorty.presentation.home.HomeViewModel
+import com.example.rickandmorty.presentation.home.ScrollState
 import com.example.rickandmorty.ui.theme.Shapes
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
@@ -76,7 +77,11 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(
+    navController: NavHostController,
+    initialSearchQuery: String = "",
+    initialScrollState: ScrollState = ScrollState()
+) {
     val viewModel: HomeViewModel = hiltViewModel()
     val characters by viewModel.characters.collectAsState(initial = emptyList())
     val isLoading by viewModel.isLoading.collectAsState()
@@ -85,11 +90,23 @@ fun HomeScreen(navController: NavHostController) {
     val networkError by viewModel.networkError.collectAsState()
     val canLoadMore by viewModel.canLoadMore.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val scrollState by viewModel.scrollState.collectAsState()
 
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
 
-    var localSearchQuery by remember { mutableStateOf("") }
+    var localSearchQuery by remember { mutableStateOf(initialSearchQuery) }
     var searchJob by remember { mutableStateOf<Job?>(null) }
+
+    val gridState = rememberLazyGridState(
+        initialFirstVisibleItemIndex = scrollState.firstVisibleItemIndex,
+        initialFirstVisibleItemScrollOffset = scrollState.firstVisibleItemScrollOffset
+    )
+
+    LaunchedEffect(Unit) {
+        if (initialSearchQuery.isNotEmpty()) {
+            viewModel.setSearchQuery(initialSearchQuery)
+        }
+    }
 
     LaunchedEffect(localSearchQuery) {
         searchJob?.cancel()
@@ -197,6 +214,7 @@ fun HomeScreen(navController: NavHostController) {
             ) {
                 if (characters.isNotEmpty()) {
                     LazyVerticalGrid(
+                        state = gridState,
                         columns = GridCells.Adaptive(150.dp),
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(12.dp),
@@ -207,6 +225,11 @@ fun HomeScreen(navController: NavHostController) {
                             CharacterCard(
                                 character = character,
                                 onCharacterClick = {
+                                    viewModel.saveScrollPosition(
+                                        gridState.firstVisibleItemIndex,
+                                        gridState.firstVisibleItemScrollOffset
+                                    )
+
                                     navController.navigate("character/${character.id}")
                                 }
                             )
@@ -242,7 +265,6 @@ fun HomeScreen(navController: NavHostController) {
                     }
 
                     if (isLoading && !isRefreshing) {
-                        Log.d("HomeScreen", "Showing loading state")
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -253,13 +275,11 @@ fun HomeScreen(navController: NavHostController) {
                         }
                     }
                 } else {
-                    Log.d("HomeScreen", "Showing error screen (нет интернета и пусто)")
                     when {
                         isLoading && !isRefreshing -> {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                             }
-                            Log.d("HomeScreen", "characters: ${characters.size}, networkError: $networkError, isLoading: $isLoading")
                         }
                         networkError -> {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

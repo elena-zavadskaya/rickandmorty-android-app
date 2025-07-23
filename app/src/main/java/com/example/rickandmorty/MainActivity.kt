@@ -8,7 +8,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
 import com.example.rickandmorty.navigation.NavRoutes
+import com.example.rickandmorty.presentation.home.ScrollState
 import com.example.rickandmorty.screens.character_details.CharacterDetailsScreen
 import com.example.rickandmorty.screens.filters.FiltersScreen
 import com.example.rickandmorty.screens.home.HomeScreen
@@ -24,9 +26,41 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = NavRoutes.HOME
+                    startDestination = "home_root"
                 ) {
-                    composable(NavRoutes.HOME) { HomeScreen(navController) }
+                    navigation(
+                        startDestination = NavRoutes.HOME,
+                        route = "home_root"
+                    ) {
+                        composable(
+                            route = NavRoutes.HOME,
+                            arguments = listOf(
+                                navArgument("searchQuery") {
+                                    type = NavType.StringType
+                                    defaultValue = ""
+                                    nullable = true
+                                },
+                                navArgument("scrollIndex") {
+                                    type = NavType.IntType
+                                    defaultValue = 0
+                                },
+                                navArgument("scrollOffset") {
+                                    type = NavType.IntType
+                                    defaultValue = 0
+                                }
+                            )
+                        ) { backStackEntry ->
+                            val searchQuery = backStackEntry.arguments?.getString("searchQuery") ?: ""
+                            val scrollIndex = backStackEntry.arguments?.getInt("scrollIndex") ?: 0
+                            val scrollOffset = backStackEntry.arguments?.getInt("scrollOffset") ?: 0
+
+                            HomeScreen(
+                                navController = navController,
+                                initialSearchQuery = searchQuery,
+                                initialScrollState = ScrollState(scrollIndex, scrollOffset)
+                            )
+                        }
+                    }
                     composable(NavRoutes.FILTERS) { FiltersScreen() }
                     composable(
                         route = NavRoutes.CHARACTER_DETAILS,

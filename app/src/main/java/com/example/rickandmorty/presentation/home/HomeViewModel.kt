@@ -1,5 +1,7 @@
 package com.example.rickandmorty.presentation.home
 
+import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.rickandmorty.data.model.CharacterItem
@@ -9,12 +11,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val repository: CharacterRepository
+    private val repository: CharacterRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _characters = MutableStateFlow<List<CharacterItem>>(emptyList())
@@ -23,11 +25,11 @@ class HomeViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _isLoadingNextPage = MutableStateFlow(false)
-    val isLoadingNextPage: StateFlow<Boolean> = _isLoadingNextPage.asStateFlow()
-
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    private val _isLoadingNextPage = MutableStateFlow(false)
+    val isLoadingNextPage: StateFlow<Boolean> = _isLoadingNextPage.asStateFlow()
 
     private val _networkError = MutableStateFlow(false)
     val networkError: StateFlow<Boolean> = _networkError.asStateFlow()
@@ -35,12 +37,49 @@ class HomeViewModel @Inject constructor(
     private val _canLoadMore = MutableStateFlow(true)
     val canLoadMore: StateFlow<Boolean> = _canLoadMore.asStateFlow()
 
-    private val _searchQuery = MutableStateFlow("")
+    private val _searchQuery = MutableStateFlow(savedStateHandle.get<String>("searchQuery") ?: "")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _scrollState = MutableStateFlow(
+        ScrollState(
+            savedStateHandle.get<Int>("scrollIndex") ?: 0,
+            savedStateHandle.get<Int>("scrollOffset") ?: 0
+        )
+    )
+    val scrollState: StateFlow<ScrollState> = _scrollState.asStateFlow()
 
     private var currentPage = 1
     private var totalPages = 1
-    private var lastSearchQuery: String = ""
+
+    init {
+
+        viewModelScope.launch {
+            _searchQuery.collect { query ->
+                savedStateHandle["searchQuery"] = query
+            }
+        }
+
+        viewModelScope.launch {
+            _scrollState.collect { state ->
+                savedStateHandle["scrollIndex"] = state.firstVisibleItemIndex
+                savedStateHandle["scrollOffset"] = state.firstVisibleItemScrollOffset
+            }
+        }
+
+        viewModelScope.launch {
+            _isLoading.value = true
+            loadPage(1)
+        }
+    }
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+        refreshCharacters()
+    }
+
+    fun saveScrollPosition(firstVisibleItemIndex: Int, firstVisibleItemScrollOffset: Int) {
+        _scrollState.value = ScrollState(firstVisibleItemIndex, firstVisibleItemScrollOffset)
+    }
 
     fun refreshCharacters() {
         viewModelScope.launch {
@@ -61,17 +100,14 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun setSearchQuery(query: String) {
-        _searchQuery.value = query
-        refreshCharacters()
-    }
-
     private suspend fun loadPage(page: Int) {
+        Log.d("HomeViewModel", "loadPage($page) started")
         try {
-            val result = if (_searchQuery.value.isEmpty()) {
+            val query = _searchQuery.value
+            val result = if (query.isEmpty()) {
                 repository.loadCharacters(page)
             } else {
-                repository.searchCharactersByName(_searchQuery.value, page)
+                repository.searchCharactersByName(query, page)
             }
 
             _characters.value = if (page == 1) {
@@ -83,24 +119,19 @@ class HomeViewModel @Inject constructor(
             totalPages = result.totalPages
             _canLoadMore.value = currentPage < totalPages
             _networkError.value = false
+            Log.d("HomeViewModel", "_networkError set to false")
         } catch (e: Exception) {
-            if (e is HttpException && e.code() == 404) {
-                _characters.value = emptyList()
-                _canLoadMore.value = false
-            } else {
-                _networkError.value = true
-            }
+            Log.e("HomeViewModel", "Error loading characters: ${e.message}")
+            _networkError.value = true
         } finally {
             _isLoading.value = false
             _isLoadingNextPage.value = false
             _isRefreshing.value = false
         }
     }
-
-    init {
-        viewModelScope.launch {
-            _isLoading.value = true
-            loadPage(1)
-        }
-    }
 }
+
+data class ScrollState(
+    val firstVisibleItemIndex: Int = 0,
+    val firstVisibleItemScrollOffset: Int = 0
+)
