@@ -18,4 +18,7 @@ interface CharacterDao {
 
     @Query("SELECT MAX(page) FROM characters")
     suspend fun getMaxPage(): Int?
+
+    @Query("SELECT * FROM characters WHERE name LIKE '%' || :query || '%'")
+    suspend fun searchCharactersByName(query: String): List<CharacterEntity>
 }

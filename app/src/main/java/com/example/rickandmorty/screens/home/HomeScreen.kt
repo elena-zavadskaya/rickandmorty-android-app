@@ -40,6 +40,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,6 +70,9 @@ import com.example.rickandmorty.ui.theme.Shapes
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -80,9 +84,20 @@ fun HomeScreen(navController: NavHostController) {
     val isLoadingNextPage by viewModel.isLoadingNextPage.collectAsState()
     val networkError by viewModel.networkError.collectAsState()
     val canLoadMore by viewModel.canLoadMore.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
 
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
-    var searchQuery by remember { mutableStateOf("") }
+
+    var localSearchQuery by remember { mutableStateOf("") }
+    var searchJob by remember { mutableStateOf<Job?>(null) }
+
+    LaunchedEffect(localSearchQuery) {
+        searchJob?.cancel()
+        searchJob = launch {
+            delay(500)
+            viewModel.setSearchQuery(localSearchQuery)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -115,8 +130,8 @@ fun HomeScreen(navController: NavHostController) {
                     Spacer(modifier = Modifier.width(12.dp))
 
                     OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
+                        value = localSearchQuery,
+                        onValueChange = { localSearchQuery = it },
                         modifier = Modifier
                             .weight(1f)
                             .padding(end = 8.dp),
@@ -283,8 +298,25 @@ fun HomeScreen(navController: NavHostController) {
                                 }
                             }
                         }
+                        searchQuery.isNotEmpty() -> {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "По запросу \"$searchQuery\" ничего не найдено",
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        text = "Попробуйте изменить запрос",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        }
                         else -> {
-                            Log.d("HomeScreen", "Showing character list")
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
