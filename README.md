@@ -18,7 +18,7 @@
 ![Экран фильтров](docs/screenshots/filters_screen.jpg)
 
 ### Детали персонажа
-![Детали персонажа](docsscreenshots/character_details.jpg)
+![Детали персонажа](docs/screenshots/character_details.jpg)
 
 ## Технологический стек
 - **Язык**: Kotlin
