@@ -1,9 +1,9 @@
-package com.example.rickandmorty.data.local
+package com.example.rickandmorty.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.example.rickandmorty.data.model.CharacterItem
-import com.example.rickandmorty.data.model.Location
+import com.example.rickandmorty.domain.model.CharacterItem
+import com.example.rickandmorty.domain.model.Location
 
 @Entity(tableName = "characters")
 data class CharacterEntity(

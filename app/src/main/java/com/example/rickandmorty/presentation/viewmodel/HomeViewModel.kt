@@ -1,11 +1,11 @@
-package com.example.rickandmorty.presentation.home
+package com.example.rickandmorty.presentation.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.rickandmorty.data.model.CharacterFilters
-import com.example.rickandmorty.data.model.CharacterItem
+import com.example.rickandmorty.domain.model.CharacterFilters
+import com.example.rickandmorty.domain.model.CharacterItem
 import com.example.rickandmorty.data.repository.CharacterRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

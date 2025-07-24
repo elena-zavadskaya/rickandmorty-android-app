@@ -1,4 +1,4 @@
-package com.example.rickandmorty.screens.home
+package com.example.rickandmorty.presentation.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -69,11 +69,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.rickandmorty.data.model.CharacterFilters
-import com.example.rickandmorty.data.model.CharacterItem
-import com.example.rickandmorty.presentation.home.HomeViewModel
-import com.example.rickandmorty.presentation.home.ScrollState
-import com.example.rickandmorty.ui.theme.Shapes
+import com.example.rickandmorty.domain.model.CharacterFilters
+import com.example.rickandmorty.domain.model.CharacterItem
+import com.example.rickandmorty.presentation.viewmodel.HomeViewModel
+import com.example.rickandmorty.presentation.viewmodel.ScrollState
+import com.example.rickandmorty.presentation.ui.Shapes
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState

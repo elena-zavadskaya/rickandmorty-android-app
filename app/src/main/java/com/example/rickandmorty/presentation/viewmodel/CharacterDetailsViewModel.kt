@@ -1,9 +1,9 @@
-package com.example.rickandmorty.presentation.character_details
+package com.example.rickandmorty.presentation.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.rickandmorty.data.model.CharacterDetail
+import com.example.rickandmorty.domain.model.CharacterDetail
 import com.example.rickandmorty.data.repository.CharacterRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

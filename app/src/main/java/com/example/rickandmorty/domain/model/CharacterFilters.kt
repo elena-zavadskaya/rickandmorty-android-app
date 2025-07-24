@@ -1,4 +1,4 @@
-package com.example.rickandmorty.data.model
+package com.example.rickandmorty.domain.model
 
 data class CharacterFilters(
     val name: String? = null,

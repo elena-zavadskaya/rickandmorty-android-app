@@ -1,4 +1,4 @@
-package com.example.rickandmorty.presentation.filters
+package com.example.rickandmorty.presentation.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

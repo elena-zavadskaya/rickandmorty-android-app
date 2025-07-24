@@ -9,13 +9,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.example.rickandmorty.data.model.CharacterFilters
-import com.example.rickandmorty.navigation.NavRoutes
-import com.example.rickandmorty.presentation.home.ScrollState
-import com.example.rickandmorty.screens.character_details.CharacterDetailsScreen
-import com.example.rickandmorty.screens.filters.FiltersScreen
-import com.example.rickandmorty.screens.home.HomeScreen
-import com.example.rickandmorty.ui.theme.RickMortyTheme
+import com.example.rickandmorty.domain.model.CharacterFilters
+import com.example.rickandmorty.presentation.navigation.NavRoutes
+import com.example.rickandmorty.presentation.viewmodel.ScrollState
+import com.example.rickandmorty.presentation.screens.CharacterDetailsScreen
+import com.example.rickandmorty.presentation.screens.FiltersScreen
+import com.example.rickandmorty.presentation.screens.HomeScreen
+import com.example.rickandmorty.presentation.ui.RickMortyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

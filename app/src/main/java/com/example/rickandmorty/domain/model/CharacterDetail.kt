@@ -1,4 +1,4 @@
-package com.example.rickandmorty.data.model
+package com.example.rickandmorty.domain.model
 
 import androidx.annotation.Keep
 

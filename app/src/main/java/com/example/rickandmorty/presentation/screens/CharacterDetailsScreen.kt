@@ -1,4 +1,4 @@
-package com.example.rickandmorty.screens.character_details
+package com.example.rickandmorty.presentation.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,8 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
-import com.example.rickandmorty.data.model.CharacterDetail
-import com.example.rickandmorty.presentation.character_details.CharacterDetailsViewModel
+import com.example.rickandmorty.domain.model.CharacterDetail
+import com.example.rickandmorty.presentation.viewmodel.CharacterDetailsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

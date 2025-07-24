@@ -1,4 +1,4 @@
-package com.example.rickandmorty.navigation
+package com.example.rickandmorty.presentation.navigation
 
 object NavRoutes {
     const val HOME = "home"

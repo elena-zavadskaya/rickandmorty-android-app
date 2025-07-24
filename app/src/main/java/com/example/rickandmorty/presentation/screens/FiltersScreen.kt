@@ -1,4 +1,4 @@
-package com.example.rickandmorty.screens.filters
+package com.example.rickandmorty.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,8 +43,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.example.rickandmorty.navigation.NavRoutes
-import com.example.rickandmorty.presentation.filters.FiltersViewModel
+import com.example.rickandmorty.presentation.navigation.NavRoutes
+import com.example.rickandmorty.presentation.viewmodel.FiltersViewModel
 import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)
