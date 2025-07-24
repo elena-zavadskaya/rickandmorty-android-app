@@ -15,6 +15,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -32,32 +33,34 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.rickandmorty.navigation.NavRoutes
+import com.example.rickandmorty.presentation.filters.FiltersViewModel
+import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FiltersScreen(
     navController: NavHostController? = null,
+    viewModel: FiltersViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
-    var name by remember { mutableStateOf("") }
-    var species by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf("") }
-
     val statusOptions = listOf("Alive", "Dead", "Unknown")
-    var selectedStatus by remember { mutableStateOf("") }
-
     val genderOptions = listOf("Female", "Male", "Genderless", "Unknown")
-    var selectedGender by remember { mutableStateOf("") }
+
+    var statusError by remember { mutableStateOf(false) }
+    var genderError by remember { mutableStateOf(false) }
+
+    fun String.urlEncoded(): String = URLEncoder.encode(this, "UTF-8")
 
     Scaffold(
         topBar = {
@@ -102,14 +105,15 @@ fun FiltersScreen(
                 shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
-                )
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
+                        value = viewModel.name ?: "",
+                        onValueChange = { viewModel.setName(it) },
                         label = { Text("Имя", style = MaterialTheme.typography.bodyMedium) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -120,14 +124,25 @@ fun FiltersScreen(
                         ),
                         textStyle = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurface
-                        )
+                        ),
+                        trailingIcon = {
+                            if (viewModel.name?.isNotEmpty() == true) {
+                                IconButton(onClick = { viewModel.setName(null) }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Очистить",
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    )
+                                }
+                            }
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
                     OutlinedTextField(
-                        value = species,
-                        onValueChange = { species = it },
+                        value = viewModel.species ?: "",
+                        onValueChange = { viewModel.setSpecies(it) },
                         label = { Text("Вид", style = MaterialTheme.typography.bodyMedium) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -138,14 +153,25 @@ fun FiltersScreen(
                         ),
                         textStyle = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurface
-                        )
+                        ),
+                        trailingIcon = {
+                            if (viewModel.species?.isNotEmpty() == true) {
+                                IconButton(onClick = { viewModel.setSpecies(null) }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Очистить",
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    )
+                                }
+                            }
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
                     OutlinedTextField(
-                        value = type,
-                        onValueChange = { type = it },
+                        value = viewModel.type ?: "",
+                        onValueChange = { viewModel.setType(it) },
                         label = { Text("Тип", style = MaterialTheme.typography.bodyMedium) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -156,7 +182,18 @@ fun FiltersScreen(
                         ),
                         textStyle = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurface
-                        )
+                        ),
+                        trailingIcon = {
+                            if (viewModel.type?.isNotEmpty() == true) {
+                                IconButton(onClick = { viewModel.setType(null) }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Очистить",
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    )
+                                }
+                            }
+                        }
                     )
                 }
             }
@@ -176,7 +213,8 @@ fun FiltersScreen(
                 shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
-                )
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -190,17 +228,21 @@ fun FiltersScreen(
                                 .fillMaxWidth()
                                 .height(56.dp)
                                 .selectable(
-                                    selected = (selectedStatus == option),
-                                    onClick = { selectedStatus = option },
+                                    selected = (viewModel.status == option),
+                                    onClick = {
+                                        viewModel.setStatus(option)
+                                        statusError = false
+                                    },
                                     role = Role.RadioButton
                                 ),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
-                                selected = (selectedStatus == option),
+                                selected = (viewModel.status == option),
                                 onClick = null,
                                 colors = RadioButtonDefaults.colors(
-                                    selectedColor = MaterialTheme.colorScheme.primary
+                                    selectedColor = MaterialTheme.colorScheme.primary,
+                                    unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             )
                             Text(
@@ -210,6 +252,17 @@ fun FiltersScreen(
                                 modifier = Modifier.padding(start = 16.dp)
                             )
                         }
+                    }
+
+                    if (statusError) {
+                        Text(
+                            text = "Недопустимое значение статуса",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp, start = 16.dp)
+                        )
                     }
                 }
             }
@@ -229,7 +282,8 @@ fun FiltersScreen(
                 shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
-                )
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -243,17 +297,21 @@ fun FiltersScreen(
                                 .fillMaxWidth()
                                 .height(56.dp)
                                 .selectable(
-                                    selected = (selectedGender == option),
-                                    onClick = { selectedGender = option },
+                                    selected = (viewModel.gender == option),
+                                    onClick = {
+                                        viewModel.setGender(option)
+                                        genderError = false
+                                    },
                                     role = Role.RadioButton
                                 ),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
-                                selected = (selectedGender == option),
+                                selected = (viewModel.gender == option),
                                 onClick = null,
                                 colors = RadioButtonDefaults.colors(
-                                    selectedColor = MaterialTheme.colorScheme.primary
+                                    selectedColor = MaterialTheme.colorScheme.primary,
+                                    unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             )
                             Text(
@@ -263,6 +321,17 @@ fun FiltersScreen(
                                 modifier = Modifier.padding(start = 16.dp)
                             )
                         }
+                    }
+
+                    if (genderError) {
+                        Text(
+                            text = "Недопустимое значение пола",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp, start = 16.dp)
+                        )
                     }
                 }
             }
@@ -275,11 +344,9 @@ fun FiltersScreen(
             ) {
                 Button(
                     onClick = {
-                        name = ""
-                        species = ""
-                        type = ""
-                        selectedStatus = ""
-                        selectedGender = ""
+                        viewModel.resetAllFilters()
+                        statusError = false
+                        genderError = false
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
@@ -294,8 +361,23 @@ fun FiltersScreen(
 
                 Button(
                     onClick = {
-                        navController?.popBackStack()
-                        // TODO: Реализовать применение фильтров
+                        statusError = viewModel.status != null && viewModel.status !in statusOptions
+                        genderError = viewModel.gender != null && viewModel.gender !in genderOptions
+
+                        if (!statusError && !genderError) {
+                            val queryParams = listOfNotNull(
+                                viewModel.name?.takeIf { it.isNotBlank() }?.let { "name=${it.urlEncoded()}" },
+                                viewModel.status?.takeIf { it.isNotBlank() }?.let { "status=${it.urlEncoded()}" },
+                                viewModel.species?.takeIf { it.isNotBlank() }?.let { "species=${it.urlEncoded()}" },
+                                viewModel.type?.takeIf { it.isNotBlank() }?.let { "type=${it.urlEncoded()}" },
+                                viewModel.gender?.takeIf { it.isNotBlank() }?.let { "gender=${it.urlEncoded()}" }
+                            ).joinToString("&")
+
+                            navController?.navigate("${NavRoutes.HOME}?$queryParams") {
+                                popUpTo(NavRoutes.HOME) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(

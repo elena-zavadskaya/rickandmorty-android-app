@@ -16,13 +16,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.WifiOff
@@ -31,6 +34,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.rickandmorty.data.model.CharacterFilters
 import com.example.rickandmorty.data.model.CharacterItem
 import com.example.rickandmorty.presentation.home.HomeViewModel
 import com.example.rickandmorty.presentation.home.ScrollState
@@ -80,7 +86,8 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     navController: NavHostController,
     initialSearchQuery: String = "",
-    initialScrollState: ScrollState = ScrollState()
+    initialScrollState: ScrollState = ScrollState(),
+    initialFilters: CharacterFilters = CharacterFilters()
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val characters by viewModel.characters.collectAsState(initial = emptyList())
@@ -89,7 +96,7 @@ fun HomeScreen(
     val isLoadingNextPage by viewModel.isLoadingNextPage.collectAsState()
     val networkError by viewModel.networkError.collectAsState()
     val canLoadMore by viewModel.canLoadMore.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
+    val filters by viewModel.filters.collectAsState()
     val scrollState by viewModel.scrollState.collectAsState()
 
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
@@ -103,8 +110,12 @@ fun HomeScreen(
     )
 
     LaunchedEffect(Unit) {
+        if (initialFilters != CharacterFilters()) {
+            viewModel.setFilters(initialFilters)
+        }
         if (initialSearchQuery.isNotEmpty()) {
             viewModel.setSearchQuery(initialSearchQuery)
+            localSearchQuery = initialSearchQuery
         }
     }
 
@@ -118,70 +129,85 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            Column {
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                            .padding(4.dp),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "R&M",
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    OutlinedTextField(
-                        value = localSearchQuery,
-                        onValueChange = { localSearchQuery = it },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp),
-                        placeholder = { Text("Найти персонажа...") },
-                        singleLine = true,
-                        shape = Shapes.medium,
-                        colors = androidx.compose.material3.TextFieldDefaults.outlinedTextFieldColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = MaterialTheme.colorScheme.secondary
-                        ),
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.Search,
-                                contentDescription = "Поиск",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.White)
+                                .padding(4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "R&M",
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
                             )
                         }
-                    )
 
-                    IconButton(
-                        onClick = { navController.navigate("filters") },
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.secondary)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = "Фильтры",
-                            tint = Color.White
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        OutlinedTextField(
+                            value = localSearchQuery,
+                            onValueChange = { localSearchQuery = it },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp),
+                            placeholder = { Text("Найти персонажа...") },
+                            singleLine = true,
+                            shape = Shapes.medium,
+                            colors = androidx.compose.material3.TextFieldDefaults.outlinedTextFieldColors(
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = MaterialTheme.colorScheme.secondary
+                            ),
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = "Поиск",
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
                         )
+
+                        IconButton(
+                            onClick = { navController.navigate("filters") },
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.secondary)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = "Фильтры",
+                                tint = Color.White
+                            )
+                        }
                     }
                 }
+
+                ActiveFiltersChips(
+                    filters = filters,
+                    onFilterRemove = { filterType ->
+                        when (filterType) {
+                            "Имя" -> viewModel.setFilters(filters.copy(name = ""))
+                            "Статус" -> viewModel.setFilters(filters.copy(status = ""))
+                            "Вид" -> viewModel.setFilters(filters.copy(species = ""))
+                            "Тип" -> viewModel.setFilters(filters.copy(type = ""))
+                            "Пол" -> viewModel.setFilters(filters.copy(gender = ""))
+                        }
+                    }
+                )
             }
         }
     ) { innerPadding ->
@@ -229,15 +255,12 @@ fun HomeScreen(
                                         gridState.firstVisibleItemIndex,
                                         gridState.firstVisibleItemScrollOffset
                                     )
-
                                     navController.navigate("character/${character.id}")
                                 }
                             )
                         }
 
-                        item(span = {
-                            GridItemSpan(maxLineSpan)
-                        }) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
                             if (canLoadMore) {
                                 Box(
                                     modifier = Modifier
@@ -318,20 +341,21 @@ fun HomeScreen(
                                 }
                             }
                         }
-                        searchQuery.isNotEmpty() -> {
+                        filters != CharacterFilters() || localSearchQuery.isNotEmpty() -> {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
-                                        text = "По запросу \"$searchQuery\" ничего не найдено",
+                                        text = "Ничего не найдено",
                                         style = MaterialTheme.typography.headlineMedium,
                                         color = MaterialTheme.colorScheme.onBackground,
                                         textAlign = TextAlign.Center
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Text(
-                                        text = "Попробуйте изменить запрос",
+                                        text = "Попробуйте изменить параметры поиска или фильтры",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                                        textAlign = TextAlign.Center
                                     )
                                 }
                             }
@@ -482,6 +506,66 @@ fun CharacterCard(
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ActiveFiltersChips(
+    filters: CharacterFilters,
+    onFilterRemove: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val activeFilters = mutableListOf<Pair<String, String>>()
+
+    filters.name?.takeIf { it.isNotEmpty() }?.let {
+        activeFilters.add("Имя" to it)
+    }
+    filters.status?.takeIf { it.isNotEmpty() }?.let {
+        activeFilters.add("Статус" to it)
+    }
+    filters.species?.takeIf { it.isNotEmpty() }?.let {
+        activeFilters.add("Вид" to it)
+    }
+    filters.type?.takeIf { it.isNotEmpty() }?.let {
+        activeFilters.add("Тип" to it)
+    }
+    filters.gender?.takeIf { it.isNotEmpty() }?.let {
+        activeFilters.add("Пол" to it)
+    }
+
+    if (activeFilters.isNotEmpty()) {
+        LazyRow(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(activeFilters) { (type, value) ->
+                FilterChip(
+                    selected = true,
+                    onClick = { onFilterRemove(type) },
+                    label = {
+                        Text(
+                            "$type: $value",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Удалить фильтр",
+                            modifier = Modifier.size(16.dp)
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        iconColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
                 )
             }
         }

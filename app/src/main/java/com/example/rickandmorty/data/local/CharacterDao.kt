@@ -21,4 +21,20 @@ interface CharacterDao {
 
     @Query("SELECT * FROM characters WHERE name LIKE '%' || :query || '%'")
     suspend fun searchCharactersByName(query: String): List<CharacterEntity>
+
+    @Query("""
+        SELECT * FROM characters 
+        WHERE (:name IS NULL OR :name = '' OR name LIKE '%' || :name || '%' COLLATE NOCASE)
+          AND (:status IS NULL OR :status = '' OR status = :status COLLATE NOCASE)
+          AND (:species IS NULL OR :species = '' OR species = :species COLLATE NOCASE)
+          AND (:type IS NULL OR :type = '' OR type = :type COLLATE NOCASE)
+          AND (:gender IS NULL OR :gender = '' OR gender = :gender COLLATE NOCASE)
+    """)
+    suspend fun filterCharacters(
+        name: String?,
+        status: String?,
+        species: String?,
+        type: String?,
+        gender: String?
+    ): List<CharacterEntity>
 }

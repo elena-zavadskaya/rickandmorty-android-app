@@ -25,7 +25,7 @@ class CharacterRepository @Inject constructor(
         val totalPages: Int
     )
 
-    suspend fun loadCharacters(page: Int): LoadResult = withContext(Dispatchers.IO) {
+    /*suspend fun loadCharacters(page: Int): LoadResult = withContext(Dispatchers.IO) {
         try {
             if (connectivity.isConnected()) {
                 val response = api.getCharacters(page)
@@ -53,7 +53,7 @@ class CharacterRepository @Inject constructor(
                 totalPages = characterDao.getMaxPage() ?: 1
             )
         }
-    }
+    }*/
 
     suspend fun getCharacterDetail(id: Int): CharacterDetail = withContext(Dispatchers.IO) {
         val cached = characterDetailDao.getCharacterDetailById(id)
@@ -66,7 +66,7 @@ class CharacterRepository @Inject constructor(
         detail
     }
 
-    suspend fun searchCharactersByName(name: String, page: Int = 1): LoadResult {
+    /*suspend fun searchCharactersByName(name: String, page: Int = 1): LoadResult {
         return withContext(Dispatchers.IO) {
             try {
                 if (connectivity.isConnected()) {
@@ -93,6 +93,60 @@ class CharacterRepository @Inject constructor(
                     )
                 }
             }
+        }
+    }*/
+
+    suspend fun filterCharacters(
+        page: Int = 1,
+        name: String? = null,
+        status: String? = null,
+        species: String? = null,
+        type: String? = null,
+        gender: String? = null
+    ): LoadResult = withContext(Dispatchers.IO) {
+        try {
+            if (connectivity.isConnected()) {
+                val response = api.getCharacters(
+                    page = page,
+                    name = name?.takeIf { it.isNotEmpty() },
+                    status = status?.takeIf { it.isNotEmpty() },
+                    species = species?.takeIf { it.isNotEmpty() },
+                    type = type?.takeIf { it.isNotEmpty() },
+                    gender = gender?.takeIf { it.isNotEmpty() }
+                )
+
+                LoadResult(
+                    characters = response.results,
+                    totalPages = response.info.pages
+                )
+            } else {
+                val filtered = characterDao.filterCharacters(
+                    name = name,
+                    status = status,
+                    species = species,
+                    type = type,
+                    gender = gender
+                )
+                LoadResult(
+                    characters = filtered.map { it.toCharacterItem() },
+                    totalPages = 1
+                )
+            }
+        } catch (e: HttpException) {
+            if (e.code() == 404) LoadResult(emptyList(), 0)
+            else throw e
+        } catch (e: Exception) {
+            val filtered = characterDao.filterCharacters(
+                name = name,
+                status = status,
+                species = species,
+                type = type,
+                gender = gender
+            )
+            LoadResult(
+                characters = filtered.map { it.toCharacterItem() },
+                totalPages = 1
+            )
         }
     }
 }

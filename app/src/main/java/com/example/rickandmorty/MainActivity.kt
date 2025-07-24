@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.example.rickandmorty.data.model.CharacterFilters
 import com.example.rickandmorty.navigation.NavRoutes
 import com.example.rickandmorty.presentation.home.ScrollState
 import com.example.rickandmorty.screens.character_details.CharacterDetailsScreen
@@ -33,11 +34,36 @@ class MainActivity : ComponentActivity() {
                         route = "home_root"
                     ) {
                         composable(
-                            route = NavRoutes.HOME,
+                            route = NavRoutes.HOME +
+                                    "?searchQuery={searchQuery}" +
+                                    "&status={status}" +
+                                    "&species={species}" +
+                                    "&type={type}" +
+                                    "&gender={gender}",
                             arguments = listOf(
                                 navArgument("searchQuery") {
                                     type = NavType.StringType
                                     defaultValue = ""
+                                    nullable = true
+                                },
+                                navArgument("status") {
+                                    type = NavType.StringType
+                                    defaultValue = null
+                                    nullable = true
+                                },
+                                navArgument("species") {
+                                    type = NavType.StringType
+                                    defaultValue = null
+                                    nullable = true
+                                },
+                                navArgument("type") {
+                                    type = NavType.StringType
+                                    defaultValue = null
+                                    nullable = true
+                                },
+                                navArgument("gender") {
+                                    type = NavType.StringType
+                                    defaultValue = null
                                     nullable = true
                                 },
                                 navArgument("scrollIndex") {
@@ -54,12 +80,22 @@ class MainActivity : ComponentActivity() {
                             val scrollIndex = backStackEntry.arguments?.getInt("scrollIndex") ?: 0
                             val scrollOffset = backStackEntry.arguments?.getInt("scrollOffset") ?: 0
 
+                            val filters = CharacterFilters(
+                                name = backStackEntry.arguments?.getString("searchQuery"),
+                                status = backStackEntry.arguments?.getString("status"),
+                                species = backStackEntry.arguments?.getString("species"),
+                                type = backStackEntry.arguments?.getString("type"),
+                                gender = backStackEntry.arguments?.getString("gender")
+                            )
+
                             HomeScreen(
                                 navController = navController,
                                 initialSearchQuery = searchQuery,
-                                initialScrollState = ScrollState(scrollIndex, scrollOffset)
+                                initialScrollState = ScrollState(scrollIndex, scrollOffset),
+                                initialFilters = filters
                             )
                         }
+
                     }
                     composable(NavRoutes.FILTERS) {
                         FiltersScreen(navController = navController)

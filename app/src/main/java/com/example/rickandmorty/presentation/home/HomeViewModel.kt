@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.rickandmorty.data.model.CharacterFilters
 import com.example.rickandmorty.data.model.CharacterItem
 import com.example.rickandmorty.data.repository.CharacterRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,9 +38,6 @@ class HomeViewModel @Inject constructor(
     private val _canLoadMore = MutableStateFlow(true)
     val canLoadMore: StateFlow<Boolean> = _canLoadMore.asStateFlow()
 
-    private val _searchQuery = MutableStateFlow(savedStateHandle.get<String>("searchQuery") ?: "")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-
     private val _scrollState = MutableStateFlow(
         ScrollState(
             savedStateHandle.get<Int>("scrollIndex") ?: 0,
@@ -48,14 +46,28 @@ class HomeViewModel @Inject constructor(
     )
     val scrollState: StateFlow<ScrollState> = _scrollState.asStateFlow()
 
+    private val _filters = MutableStateFlow(
+        CharacterFilters(
+            name = savedStateHandle.get<String>("name"),
+            status = savedStateHandle.get<String>("status"),
+            species = savedStateHandle.get<String>("species"),
+            type = savedStateHandle.get<String>("type"),
+            gender = savedStateHandle.get<String>("gender")
+        )
+    )
+    val filters: StateFlow<CharacterFilters> = _filters.asStateFlow()
+
     private var currentPage = 1
     private var totalPages = 1
 
     init {
-
         viewModelScope.launch {
-            _searchQuery.collect { query ->
-                savedStateHandle["searchQuery"] = query
+            _filters.collect { filters ->
+                savedStateHandle["name"] = filters.name
+                savedStateHandle["status"] = filters.status
+                savedStateHandle["species"] = filters.species
+                savedStateHandle["type"] = filters.type
+                savedStateHandle["gender"] = filters.gender
             }
         }
 
@@ -72,8 +84,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun setSearchQuery(query: String) {
-        _searchQuery.value = query
+    fun setFilters(filters: CharacterFilters) {
+        _filters.value = filters
+        currentPage = 1
+        _characters.value = emptyList()
+        refreshCharacters()
+    }
+
+    fun setSearchQuery(query: String?) {
+        _filters.value = _filters.value.copy(name = query)
         refreshCharacters()
     }
 
@@ -91,7 +110,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun loadNextPage() {
-        if (currentPage >= totalPages) return
+        if (currentPage >= totalPages || _isLoadingNextPage.value) return
 
         viewModelScope.launch {
             _isLoadingNextPage.value = true
@@ -103,12 +122,15 @@ class HomeViewModel @Inject constructor(
     private suspend fun loadPage(page: Int) {
         Log.d("HomeViewModel", "loadPage($page) started")
         try {
-            val query = _searchQuery.value
-            val result = if (query.isEmpty()) {
-                repository.loadCharacters(page)
-            } else {
-                repository.searchCharactersByName(query, page)
-            }
+            val filters = _filters.value
+            val result = repository.filterCharacters(
+                page = page,
+                name = filters.name,
+                status = filters.status,
+                species = filters.species,
+                type = filters.type,
+                gender = filters.gender
+            )
 
             _characters.value = if (page == 1) {
                 result.characters
@@ -119,7 +141,6 @@ class HomeViewModel @Inject constructor(
             totalPages = result.totalPages
             _canLoadMore.value = currentPage < totalPages
             _networkError.value = false
-            Log.d("HomeViewModel", "_networkError set to false")
         } catch (e: Exception) {
             Log.e("HomeViewModel", "Error loading characters: ${e.message}")
             _networkError.value = true
