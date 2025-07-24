@@ -12,13 +12,13 @@
 ## Скриншоты
 
 ### Главный экран
-![Главный экран](screenshots/home_screen.png)
+![Главный экран](docs/screenshots/home_screen.png)
 
 ### Экран фильтров
-![Экран фильтров](screenshots/filters_screen.png)
+![Экран фильтров](docs/screenshots/filters_screen.png)
 
 ### Детали персонажа
-![Детали персонажа](screenshots/character_details.png)
+![Детали персонажа](docsscreenshots/character_details.png)
 
 ## Технологический стек
 - **Язык**: Kotlin
