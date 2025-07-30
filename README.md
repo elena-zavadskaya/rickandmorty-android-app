@@ -130,7 +130,7 @@ navController.navigate("${NavRoutes.HOME}?$queryParams")
 ## Сборка и запуск
 1. Клонировать репозиторий:
    ```bash
-   git clone https://github.com/your-username/rick-and-morty-app.git
+   git clone https://github.com/elena-zavadskaya/rickandmorty-android-app.git
    ```
 3. Открыть проект в Android Studio
 4. Собрать проект:
